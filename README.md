@@ -4,13 +4,13 @@
 [![Code Climate](https://codeclimate.com/github/phallstrom/slackistrano.png)](https://codeclimate.com/github/phallstrom/slackistrano)
 [![Build Status](https://travis-ci.org/phallstrom/slackistrano.png?branch=master)](https://travis-ci.org/phallstrom/slackistrano)
 
-Send notifications to [Slack](https://slack.com) about [Capistrano](http://www.capistranorb.com) deployments.
+Send notifications to [Microsoft Teams](https://products.office.com/en-us/microsoft-teams) about [Capistrano](http://www.capistranorb.com) deployments.
 
 ## Requirements
 
 - Capistrano >= 3.8.1
 - Ruby >= 2.0
-- A Slack account
+- A Teams account and a channel to send notifications to.
 
 ## Installation
 
@@ -34,16 +34,11 @@ Send notifications to [Slack](https://slack.com) about [Capistrano](http://www.c
 
 ## Configuration
 
-You have two options to notify a channel in Slack when you deploy:
-
-1. Using *Incoming WebHooks* integration, offering more options but requires
-   one of the five free integrations. This option provides more messaging
-   flexibility.
-2. Using *Slackbot*, which will not use one of the five free integrations.
+Create an *Incoming WebHooks* connector to the target channel.
 
 ### Incoming Webhook
 
-1. Configure your Slack's Incoming Webhook.
+1. Configure your Teams Incoming Webhook connector.
 2. Add the following to `config/deploy.rb`:
 
    ```ruby
@@ -159,6 +154,10 @@ if defined?(Slackistrano::Messaging)
    end
 end
 ```
+
+The output would look like this:
+
+![Custom Messaging](https://github.com/ritxi/slackistrano/raw/master/Screenshot%202019-08-13%20at%2014.42.31.png)
 
 To set this up:
 
