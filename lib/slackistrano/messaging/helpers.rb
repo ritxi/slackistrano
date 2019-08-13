@@ -6,10 +6,6 @@ module Slackistrano
         options.fetch(:icon_url, 'https://raw.githubusercontent.com/phallstrom/slackistrano/master/images/slackistrano.png')
       end
 
-      def icon_emoji
-        options.fetch(:icon_emoji, nil)
-      end
-
       def username
         options.fetch(:username, 'Slackistrano')
       end

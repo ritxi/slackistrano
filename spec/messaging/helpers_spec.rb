@@ -13,17 +13,6 @@ describe Slackistrano::Messaging::Default do
     end
   end
 
-  describe "#icon_emoji" do
-    it "returns a default of nil" do
-      expect(subject.icon_emoji).to eq nil
-    end
-
-    it "returns a custom option" do
-      allow(subject).to receive(:options).and_return(icon_emoji: ':thumbsup:')
-      expect(subject.icon_emoji).to eq ':thumbsup:'
-    end
-  end
-
   describe "#username" do
     it "returns a default" do
       expect(subject.username).to eq 'Slackistrano'

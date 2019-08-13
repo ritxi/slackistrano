@@ -40,17 +40,9 @@ module Slackistrano
       payload = {
         username: @messaging.username,
         icon_url: @messaging.icon_url,
-        icon_emoji: @messaging.icon_emoji,
       }.merge(payload)
 
-      channels = Array(@messaging.channels_for(action))
-      if !@messaging.via_slackbot? && channels.empty?
-        channels = [nil] # default webhook channel
-      end
-
-      channels.each do |channel|
-        post(payload.merge(channel: channel))
-      end
+      post(payload)
     end
 
     private ##################################################
@@ -70,7 +62,7 @@ module Slackistrano
       end
 
       if response && response.code !~ /^2/
-        warn("[slackistrano] Slack API Failure!")
+        warn("[slackistrano] API Failure!")
         warn("[slackistrano]   URI: #{response.uri}")
         warn("[slackistrano]   Code: #{response.code}")
         warn("[slackistrano]   Message: #{response.message}")
@@ -79,25 +71,9 @@ module Slackistrano
     end
 
     def post_to_slack(payload = {})
-      if @messaging.via_slackbot?
-        post_to_slack_as_slackbot(payload)
-      else
-        post_to_slack_as_webhook(payload)
-      end
-    end
-
-    def post_to_slack_as_slackbot(payload = {})
-      uri = URI(URI.encode("https://#{@messaging.team}.slack.com/services/hooks/slackbot?token=#{@messaging.token}&channel=#{payload[:channel]}"))
-      text = (payload[:attachments] || [payload]).collect { |a| a[:text] }.join("\n")
-      Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
-        http.request_post uri, text
-      end
-    end
-
-    def post_to_slack_as_webhook(payload = {})
-      params = {'payload' => payload.to_json}
+      params = payload.to_json
       uri = URI(@messaging.webhook)
-      Net::HTTP.post_form(uri, params)
+      Net::HTTP.post(uri, params, 'Content-Type' => 'application/json')
     end
 
     def dry_run?
