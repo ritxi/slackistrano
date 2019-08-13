@@ -17,7 +17,7 @@ Send notifications to [Slack](https://slack.com) about [Capistrano](http://www.c
 1. Add this line to your application's Gemfile:
 
    ```ruby
-   gem 'slackistrano'
+   gem 'slackistrano', github: 'ritxi:slackistrano'
    ```
 
 2. Execute:
@@ -48,21 +48,7 @@ You have two options to notify a channel in Slack when you deploy:
 
    ```ruby
    set :slackistrano, {
-     channel: '#your-channel',
      webhook: 'your-incoming-webhook-url'
-   }
-   ```
-
-### Slackbot
-
-1. Configure your Slack's Slackbot (not Bot).
-2. Add the following to `config/deploy.rb`:
-
-   ```ruby
-   set :slackistrano, {
-     channel: '#your-channel',
-     team: 'your-team-name',
-     token: 'your-token'
    }
    ```
 
@@ -79,8 +65,6 @@ your own).
    set :slackistrano, {
     ...
     username: 'Foobar the Deployer',
-    icon_emoji: ':thumbsup:', # takes precedence over icon_url
-    icon_url: 'https://avatars2.githubusercontent.com/u/16705?v=4&s=40',
     ...
    }
    ```
@@ -110,16 +94,6 @@ if defined?(Slackistrano::Messaging)
    module Slackistrano
      class CustomMessaging < Messaging::Base
 
-       # Send failed message to #ops. Send all other messages to default channels.
-       # The #ops channel must exist prior.
-       def channels_for(action)
-         if action == :failed
-           "#ops"
-         else
-           super
-         end
-       end
-
        # Suppress starting message.
        def payload_for_starting
          nil
@@ -135,48 +109,42 @@ if defined?(Slackistrano::Messaging)
          nil
        end
 
+       def logo
+         @logo ||= 'https://url-to-my-logo.jpg'
+       end
+
+       # Reference
+       # https://docs.microsoft.com/en-us/outlook/actionable-messages/message-card-reference
+       def base_message(message, facts = [])
+         { '@type' => 'MessageCard',
+           '@context' => 'http://schema.org/extensions',
+           'themeColor' => '0076D7', 'summary' => message,
+           'sections' => [{
+             'activityTitle' => "![MyLogo](#{logo}) My App deployment",
+             'activitySubtitle' => message,
+             'activityImage' => logo,
+             'facts' => facts,
+             'markdown' => true
+           }] }
+       end
+
+       # Suppress updating message.
+       def payload_for_updating
+         base_message("#{deployer} has started deploying branch #{branch} of "\
+                      "#{application} to #{stage}")
+       end
+
        # Fancy updated message.
        # See https://api.slack.com/docs/message-attachments
        def payload_for_updated
-         {
-           attachments: [{
-             color: 'good',
-             title: 'Integrations Application Deployed :boom::bangbang:',
-             fields: [{
-               title: 'Environment',
-               value: stage,
-               short: true
-             }, {
-               title: 'Branch',
-               value: branch,
-               short: true
-             }, {
-               title: 'Deployer',
-               value: deployer,
-               short: true
-             }, {
-               title: 'Time',
-               value: elapsed_time,
-               short: true
-             }],
-             fallback: super[:text]
-           }],
-           text: "<!here> Application Deployed!"
-         }
-       end
-
-       # Default reverted message.  Alternatively simply do not redefine this
-       # method.
-       def payload_for_reverted
-         super
-       end
-
-       # Slightly tweaked failed message.
-       # See https://api.slack.com/docs/message-formatting
-       def payload_for_failed
-         payload = super
-         payload[:text] = "OMG :fire: #{payload[:text]}"
-         payload
+         revision = fetch(:current_revision)
+         base_message('MyApp has been deployed successfully ',
+                      [{ name: 'Project',
+                         value: '[My Company](https://my-company-url.com)' },
+                       { name: 'Environment', value: stage },
+                       { name: 'Deployer', value: deployer },
+                       { name: 'Revision',
+                         value: "[#{revision[0..6]}](https://repository-url/commits/#{revision})" }])
        end
 
        # Override the deployer helper to pull the best name available (git, password file, env vars).
@@ -191,9 +159,6 @@ if defined?(Slackistrano::Messaging)
    end
 end
 ```
-
-The output would look like this:
-![Custom Messaging](https://raw.githubusercontent.com/phallstrom/slackistrano/overhaul/images/custom_messaging.jpg)
 
 To set this up:
 
@@ -210,7 +175,6 @@ To set this up:
    ```ruby
    set :slackistrano, {
      klass: Slackistrano::CustomMessaging,
-     channel: '#your-channel',
      webhook: 'your-incoming-webhook-url'
    }
    ```
@@ -221,7 +185,7 @@ To set this up:
 
 ## Disabling posting to Slack
 
-You can disable deployment notifications to a specific stage by setting the `:slackistrano` 
+You can disable deployment notifications to a specific stage by setting the `:slackistrano`
 configuration variable to `false` instead of actual settings.
 
 ```ruby

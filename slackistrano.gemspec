@@ -6,7 +6,7 @@ require 'slackistrano/version'
 Gem::Specification.new do |gem|
   gem.name          = "slackistrano"
   gem.version       = Slackistrano::VERSION
-  gem.authors       = ["Philip Hallstrom"]
+  gem.authors       = ["Philip Hallstrom", "Ricard Forniol Agustí"]
   gem.email         = ["philip@pjkh.com"]
   gem.description   = %q{Send notifications to Slack about Capistrano deployments.}
   gem.summary       = %q{Send notifications to Slack about Capistrano deployments.}
